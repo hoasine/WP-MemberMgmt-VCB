@@ -1,0 +1,40 @@
+{
+  "id": "6b51a6c5-8dab-4c8d-ac1b-34d1e08086f4",
+  "name": "worldPOS-MemberMgt",
+  "publisher": "World POS Sdn. Bhd.",
+  "version": "24.1.0.14",
+  "brief": "",
+  "description": "Member Management & VCB Integration",
+  "privacyStatement": "",
+  "EULA": "",
+  "help": "",
+  "url": "",
+  "logo": "",
+  "dependencies": [
+    {
+      "id": "5ecfc871-5d82-43f1-9c54-59685e82318d",
+      "publisher": "LS Retail",
+      "name": "LS Central",
+      "version": "24.1.0.306"
+    }    
+  ],
+  "screenshots": [],
+  "platform": "24.0.0.0",
+  "application": "24.0.0.0",
+  "idRanges": [
+    {
+      "from": 72100,
+      "to": 72199
+    }
+  ],
+  "resourceExposurePolicy": {
+    "allowDebugging": true,
+    "allowDownloadingSource": true,
+    "includeSourceInSymbolFile": true
+  },
+  "runtime": "13.0",
+  "target": "Cloud",
+  "features": [
+    "NoImplicitWith"
+  ]
+}
