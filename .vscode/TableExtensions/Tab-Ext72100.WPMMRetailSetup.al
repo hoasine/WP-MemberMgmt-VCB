@@ -37,5 +37,10 @@ tableextension 72100 "WPMM Retail Setup" extends "LSC Retail Setup"
             Caption = 'Auto Post MP on Calc.';
             DataClassification = ToBeClassified;
         }
+        field(72106; "Enable Copy Trans. Print"; Boolean)
+        {
+            Caption = 'Enable Copy Trans. Print';
+            DataClassification = ToBeClassified;
+        }
     }
 }

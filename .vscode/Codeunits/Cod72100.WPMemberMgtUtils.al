@@ -150,7 +150,7 @@ codeunit 72100 WPMemberMgtUtils
         lrecrs.TestField("Temp. Member Def. Card No.");
         clear(LRecIC);
         lrecic.setrange(Infocode, lrecrs."Temp. Member Infocode");
-        lrecic.setrange(Processed, true);
+        // lrecic.setrange(Processed, true);
         if lrecic.findfirst then begin
             repeat
                 if LineIsProcessed(lrecic) = false then
@@ -200,6 +200,7 @@ codeunit 72100 WPMemberMgtUtils
                             else
                                 LineNo := 1;
 
+                            // giam cho tai khoan tam
                             clear(LRecPJ);
                             lrecpj."Journal Batch Name" := 'DEFAULT';
                             LRecPJ."Journal Template Name" := 'T-ADJ';
@@ -216,6 +217,7 @@ codeunit 72100 WPMemberMgtUtils
                             lrecpj.Points := lrecmp.Points;
                             lrecpj.insert;
 
+                            // tang cho tai khoan tem moi
                             LRecPJ."Line No." := LineNo + 1;
                             lrecpj.Type := lrecpj.Type::"Pos. Adjustment";
                             lrecpj.validate("Account No.", lrecmc."Account No.");
@@ -280,7 +282,7 @@ codeunit 72100 WPMemberMgtUtils
         LRecMem: Record "WP Member Information TKV";
     begin
         clear(LRecMem);
-        LRecMem.SetRange(Processed, false);
+        // LRecMem.SetRange(Processed, false);
         if lrecmem.FindFirst() then begin
             repeat
                 if LRecMem."membership_card_no" <> '' then begin

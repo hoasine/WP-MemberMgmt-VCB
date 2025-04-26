@@ -2,7 +2,7 @@
   "id": "6b51a6c5-8dab-4c8d-ac1b-34d1e08086f4",
   "name": "worldPOS-MemberMgt",
   "publisher": "World POS Sdn. Bhd.",
-  "version": "24.1.0.14",
+  "version": "24.1.0.16",
   "brief": "",
   "description": "Member Management & VCB Integration",
   "privacyStatement": "",
@@ -15,7 +15,7 @@
       "id": "5ecfc871-5d82-43f1-9c54-59685e82318d",
       "publisher": "LS Retail",
       "name": "LS Central",
-      "version": "24.1.0.306"
+      "version": "24.1.21.1157"
     }    
   ],
   "screenshots": [],

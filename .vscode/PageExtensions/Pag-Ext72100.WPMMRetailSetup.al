@@ -2,6 +2,14 @@ pageextension 72100 "WPMM Retail Setup" extends "LSC Retail Setup"
 {
     layout
     {
+        addlast(General)
+        {
+            field("Enable Copy Trans. Print"; Rec."Enable Copy Trans. Print")
+            {
+                ApplicationArea = All;
+            }
+        }
+
         addbefore(Version)
         {
             group("Member Management")

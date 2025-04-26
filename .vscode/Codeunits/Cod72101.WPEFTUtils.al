@@ -55,7 +55,6 @@ codeunit 72101 WPEFTUtils
         Url := StrSubstNo(LRecPOSTerm."VCB Payment Service URL", TranType);
         LogText(POSTransaction."Receipt No.", 'EFT Request', Url);
         if SendToEFT(url, ResponseMsg) = true then begin
-            Message('Response return: ' + ResponseMsg);
             LogText(POSTransaction."Receipt No.", 'EFT Response', ResponseMsg);
             ParseRespMsg(ResponseMsg);
             if gAMOUNT = '' then begin
@@ -174,8 +173,6 @@ codeunit 72101 WPEFTUtils
         //responeMsg := '/APP:PAYMENT_STD;PROC_CODE:000000;DATE:1206;TIME:102158;REF_NO:192320389537;APPV_CODE:440100;RESPONSE_CODE:00;TERMINAL_ID:66666666;CARD_TYPE:VISA;MERCHANT_CODE:666666666666666;REF_ID:00001999;CURRENCY_CODE:704;SERIAL_NUMBER:1851575784;PAN:4835-****-****-3666;NAME: /;INVOICE:000067;AMOUNT:300000;SEND:OK;';//SALE
         //responeMsg := '/APP:PAYMENT_STD;PROC_CODE:020000;DATE:1206;TIME:102526;REF_NO:737670050806;APPV_CODE:440100;RESPONSE_CODE:00;TERMINAL_ID:66666666;CARD_TYPE:VISA;MERCHANT_CODE:666666666666666;REF_ID:00001999;CURRENCY_CODE:704;SERIAL_NUMBER:1851575784;PAN:4835-****-****-3666;NAME: /;INVOICE:000067;AMOUNT:300000;SEND:OK;';//void
         responeMsg := copystr(responeMsg, 2);
-
-        Message('Content 3:' + responeMsg);
 
         ResponseArray := responeMsg.Split(';');
         foreach respfield in responsearray do begin
