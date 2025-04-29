@@ -4,8 +4,8 @@ codeunit 72102 CommandPos
     [EventSubscriber(ObjectType::Codeunit, Codeunit::"LSC POS Transaction Events", 'OnBeforeVoidAndCopyTransaction', '', false, false)]
     local procedure OnBeforeVoidAndCopyTransaction(var Transaction: Record "LSC Transaction Header"; var IsHandled: Boolean)
     begin
-        if (Transaction."Sale Is Return Sale" = true) then begin
-            Error(StrSubstNo('No lines were eligible for refund from Receipt %1', Transaction."Receipt No."));
+        if (Transaction."Sale Is Return Sale" = true) or (Transaction."Refund Receipt No." <> '') then begin
+
             IsHandled := true;
         end else begin
             Transaction."Sale Is Cancel Sale" := true;
