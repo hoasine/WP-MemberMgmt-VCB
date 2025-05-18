@@ -62,4 +62,70 @@ codeunit 72102 CommandPos
             end;
         end;
     end;
+
+    [EventSubscriber(ObjectType::Codeunit, Codeunit::"LSC POS Print Utility", 'OnBeforePrintToWindowsPrinter', '', false, false)]
+    local procedure OnBeforePrintToWindowsPrinter(var PrinterName: Text; var PrintBuffer: Record "LSC POS Print Buffer"; var PrintBufferIndex: Integer; var LinesPrinted: Integer; var IsHandled: Boolean; var ReturnValue: Boolean)
+    var
+        tbTransH: Record "LSC Transaction Header";
+    begin
+        IsHandled := true;
+    end;
+
+
+    // [EventSubscriber(ObjectType::Codeunit, Codeunit::"LSC POS Print Utility", 'OnBeforePrintSalesSlip', '', false, false)]
+    // local procedure OnBeforePrintSalesSlip(var Transaction: Record "LSC Transaction Header"; var PrintBuffer: Record "LSC POS Print Buffer"; var PrintBufferIndex: Integer; var LinesPrinted: Integer; var IsHandled: Boolean; var ReturnValue: Boolean)
+    // var
+    //     GenPosFunc: Record "LSC POS Func. Profile";
+    //     Store: Record "LSC Store";
+    //     Count: Decimal;
+    //     i: Integer;
+    // begin
+    //     IsHandled := true;
+
+    //     IF Transaction."Transaction No." = 0 THEN
+    //         ReturnValue := TRUE;
+
+    //     Store.Get(Transaction."Store No.");
+    //     GenPosFunc.Get('#TKV');
+
+    //     // WindowInitialize();
+    //     IF GenPosFunc."Sales Slip Report ID" <> 0 THEN BEGIN
+    //         //LS-7622-
+    //         IF Transaction."Sale Is Return Sale" THEN BEGIN
+    //             COMMIT;
+    //             ReturnValue := TRUE;
+    //         END;
+    //         Transaction.SETRANGE("Store No.", Transaction."Store No.");
+    //         Transaction.SETRANGE("POS Terminal No.", Transaction."POS Terminal No.");
+    //         Transaction.SETRANGE("Transaction No.", Transaction."Transaction No.");
+    //         //NWV-WAT1.0 FIX01 +
+    //         // IF CheckPrintCopyTenderType(Transaction) THEN
+    //         // Count := GenPosFunc."No. Of Print Copy";
+    //         Count := 1;
+
+    //         FOR i := 0 TO Count DO BEGIN
+    //             if i = 0 then
+    //                 Transaction."Is Print of Copy" := false;
+
+    //             REPORT.RUN(GenPosFunc."Sales Slip Report ID", FALSE, TRUE, Transaction);
+    //             // Transaction."No. of Invoices" += 1;  // NWV-WAT1.0 - FIX1.0
+    //             // Transaction.MODIFY;  // NWV-WAT1.0 - FIX1.0
+    //         END;
+    //     end;
+    // end;
+
+    // LOCAL procedure CheckPrintCopyTenderType(pTransactionHeader: Record "Transaction Header"): Boolean
+    // begin
+    //     lRec_TransPaymentEntry.SETRANGE("Store No.", pTransactionHeader."Store No.");
+    //     lRec_TransPaymentEntry.SETRANGE("POS Terminal No.", pTransactionHeader."POS Terminal No.");
+    //     lRec_TransPaymentEntry.SETRANGE("Transaction No.", pTransactionHeader."Transaction No.");
+    //     IF lRec_TransPaymentEntry.FINDSET THEN
+    //         REPEAT
+    //             IF lRec_TenderType.GET(lRec_TransPaymentEntry."Store No.", lRec_TransPaymentEntry."Tender Type") THEN
+    //                 IF lRec_TenderType."Is Print Copy" THEN
+    //                     EXIT(TRUE);
+    //         UNTIL lRec_TransPaymentEntry.NEXT = 0;
+    //     EXIT(FALSE);
+    // end;
+
 }

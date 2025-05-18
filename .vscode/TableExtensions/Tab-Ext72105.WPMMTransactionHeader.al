@@ -8,5 +8,10 @@ tableextension 72105 WPMMTransactionHeader extends "LSC Transaction Header"
         {
             Caption = 'Sale Is Cancel Sale';
         }
+
+        field(10038911; "Is Print of Copy"; Boolean)
+        {
+            Caption = 'Is Print of Copy';
+        }
     }
 }
