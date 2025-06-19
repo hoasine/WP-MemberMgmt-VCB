@@ -42,5 +42,10 @@ tableextension 72100 "WPMM Retail Setup" extends "LSC Retail Setup"
             Caption = 'Enable Copy Trans. Print';
             DataClassification = ToBeClassified;
         }
+        field(72107; "Url API"; Text[500])
+        {
+            Caption = 'Url API';
+            DataClassification = ToBeClassified;
+        }
     }
 }

@@ -2,6 +2,7 @@ namespace WPMemberManagementExt.WPMemberManagementExt;
 
 codeunit 72101 WPEFTUtils
 {
+
     [EventSubscriber(ObjectType::Codeunit, Codeunit::"LSC POS Transaction Events", 'OnBeforeInsertLineInsertPaymentLine', '', false, false)]
     internal procedure OnBeforeInsertLineInsertPaymentLine(var POSTransaction: Record "LSC POS Transaction"; var POSTransLine: Record "LSC POS Trans. Line"; var CurrInput: Text; var TenderTypeCode: Code[10]; Balance: decimal; PaymentAmount: Decimal; STATE: Code[10]; var isHandled: Boolean)
     var

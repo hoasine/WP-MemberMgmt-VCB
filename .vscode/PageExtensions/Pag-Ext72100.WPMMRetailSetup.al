@@ -8,6 +8,10 @@ pageextension 72100 "WPMM Retail Setup" extends "LSC Retail Setup"
             {
                 ApplicationArea = All;
             }
+            field("Url API"; Rec."Url API")
+            {
+                ApplicationArea = All;
+            }
         }
 
         addbefore(Version)
