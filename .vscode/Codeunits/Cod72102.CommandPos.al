@@ -7,12 +7,13 @@ codeunit 72102 CommandPos
         LRecTT: Record "LSC Tender Type";
         LRecPOSTerm: Record "LSC POS Terminal";
         LRecCE: record "LSC POS Card Entry";
-        tbPayment: record "LSC Trans. Payment Entry";
+        origPosEntry: record "LSC POS Card Entry";
         URL: text;
         TranType: text;
         ResponseMsg: text;
         nextEntryNo: Integer;
-
+        countTrans: Integer;
+        number: Integer;
     begin
         if (Transaction."Sale Is Return Sale" = true) or (Transaction."Refund Receipt No." <> '') then begin
 
@@ -27,27 +28,36 @@ codeunit 72102 CommandPos
                 if LRecPOSTerm."Enable VCB Integration" = false then exit;
             end;
 
-            //CheckTender Type VCB
-            Clear(tbPayment);
-            tbPayment.SetRange("Store No.", Transaction."Store No.");
-            tbPayment.SetRange("POS Terminal No.", Transaction."POS Terminal No.");
-            tbPayment.SetRange("Receipt No.", Transaction."Receipt No.");
-            if tbPayment.FindSet() then begin
+            clear(origPosEntry);
+            origPosEntry.SetRange("Store No.", Transaction."Store No.");
+            origPosEntry.SetRange("POS Terminal No.", Transaction."POS Terminal No.");
+            origPosEntry.SetRange("Receipt No.", Transaction."Receipt No.");
+            countTrans := origPosEntry.Count();
+            number := 0;
+            if origPosEntry.FindFirst() then begin
                 repeat
+                    number := number + 1;
                     clear(LRecTT);
-                    lrectt.setrange("Code", tbPayment."Tender Type");
-                    lrectt.setrange("Store No.", tbPayment."Store No.");
+                    lrectt.setrange("Code", origPosEntry."Tender Type");
+                    lrectt.setrange("Store No.", origPosEntry."Store No.");
                     if lrectt.FindFirst() then begin
+                        Clear(LRecCE);
+                        LRecCE.SetRange("Receipt No.", Transaction."Receipt No.");
+                        LRecCE.SetRange("Transaction Type", LRecCE."Transaction Type"::"Void Sale");
+                        LRecCE.SetRange("EFT Transaction ID", origPosEntry."EFT Transaction ID");
+                        if LRecCE.FindFirst() then begin
+                        end;
+
                         if lrectt."EFT Type" = lrectt."EFT Type"::"VCB Cards" then begin
                             if Transaction."Sale Is Return Sale" or Transaction."Sale Is Cancel Sale" then begin
                                 cleaR(LRecCE);
                                 LRecCE.setrange("Store No.", Transaction."Store No.");
                                 LRecCE.setrange("Receipt No.", Transaction."Receipt No.");
                                 LRecCE.setrange("Pos Terminal No.", Transaction."POS Terminal No.");
-                                LRecCE.setrange("Amount", tbPayment."Amount Tendered");
+                                LRecCE.setrange("Amount", origPosEntry."Amount");
                                 LRecCE.setrange("Authorisation Ok", true);
                                 if LRecCE.FindFirst() then begin
-                                    TranType := StrSubstNo('DoVoid?HostName=%1&PortNo=%2&TimeOut=%3&TerminalID=%4&InvoiceID=%5&Amount=%6&MaxRetries=%7', LRecPOSTerm."VCB Host Name", LRecPOSTerm."VCB Port No", LRecPOSTerm."VCB Time Out", LRecPOSTerm."VCB Terminal ID", LRecCE."EFT Transaction ID", Format(tbPayment."Amount Tendered", 0, '<Integer>'), LRecPOSTerm."VCB Max Retries");
+                                    TranType := StrSubstNo('DoVoid?HostName=%1&PortNo=%2&TimeOut=%3&TerminalID=%4&InvoiceID=%5&Amount=%6&MaxRetries=%7', LRecPOSTerm."VCB Host Name", LRecPOSTerm."VCB Port No", LRecPOSTerm."VCB Time Out", LRecPOSTerm."VCB Terminal ID", LRecCE."EFT Transaction ID", Format(origPosEntry."Amount", 0, '<Integer>'), LRecPOSTerm."VCB Max Retries");
                                 end else begin
                                     exit;
                                 end;
@@ -63,7 +73,7 @@ codeunit 72102 CommandPos
                                 ParseRespMsg(ResponseMsg);
                                 if gAMOUNT = '' then begin
                                     // Handle error
-                                    POSGUI.PosMessage(StrSubstNo('Error: Invalid Auth. Amount "%1"\Expected Amount "%2"', gAMOUNT, format(tbPayment."Amount Tendered", 0, '<Integer>')));
+                                    POSGUI.PosMessage(StrSubstNo('Error: Invalid Auth. Amount "%1"\Expected Amount "%2"', gAMOUNT, format(origPosEntry."Amount", 0, '<Integer>')));
                                     error('');
                                 end;
                                 if gerror = '' then begin
@@ -77,11 +87,12 @@ codeunit 72102 CommandPos
 
                                     clear(LRecCE);
                                     LRecCE."Store No." := Transaction."Store No.";
+                                    LRecCE."Transaction No." := Transaction."Transaction No.";
                                     lrecce."POS Terminal No." := Transaction."POS Terminal No.";
                                     LRecCE."Entry No." := nextEntryNo;
-                                    lrecce."Line No." := tbPayment."Line No.";
+                                    lrecce."Line No." := number * 1000;
                                     LRecCE."Receipt No." := Transaction."Receipt No.";
-                                    lrecce."Tender Type" := tbPayment."Tender Type";
+                                    lrecce."Tender Type" := origPosEntry."Tender Type";
                                     if Transaction."Sale Is Return Sale" then
                                         LRecCE."Transaction Type" := LRecCE."Transaction Type"::"Void Sale"
                                     else
@@ -90,8 +101,8 @@ codeunit 72102 CommandPos
                                     lrecce.Time := time;
                                     if gRESPONSE_CODE = '00' then
                                         LRecCE."Authorisation Ok" := true;
-                                    LRecCE."Card Number" := gPAN;
-                                    lrecce."Card Type" := gCARD_TYPE;
+                                    LRecCE."Card Number" := origPosEntry."Card Number";
+                                    lrecce."Card Type" := origPosEntry."Card Type";
                                     LRecCE."Res.code" := gRESPONSE_CODE;
                                     lrecce."EFT Auth.code" := gAPPV_CODE;
                                     lrecce."EFT Merchant No." := gMERCHANT_CODE;
@@ -108,7 +119,7 @@ codeunit 72102 CommandPos
                                     lrecce."EFT Batch No." := gREF_ID;
                                     lrecce."EFT Additional ID" := gSERIAL_NUMBER;
                                     lrecce."Auth. Source Code" := gPROC_CODE;
-                                    lrecce."Extra Data" := gNAME;
+                                    lrecce."Extra Data" := origPosEntry."Extra Data";
                                     LRecCE.INSERT(true);
                                 end else begin
                                     // Handle error
@@ -123,11 +134,10 @@ codeunit 72102 CommandPos
                             exit;// Neu khong VCB thi exit
                         end;
                     end;
-                until tbPayment.Next() = 0;
+                until number = countTrans;
             end;
         end;
     end;
-
 
     internal procedure SendToEFT(Url: Text; var ResponseText: text): Boolean;
     var
