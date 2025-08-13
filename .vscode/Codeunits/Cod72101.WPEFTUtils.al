@@ -3,8 +3,8 @@ namespace WPMemberManagementExt.WPMemberManagementExt;
 codeunit 72101 WPEFTUtils
 {
 
-    [EventSubscriber(ObjectType::Codeunit, Codeunit::"LSC POS Transaction Events", 'OnBeforeInsertLineInsertPaymentLine', '', false, false)]
-    internal procedure OnBeforeInsertLineInsertPaymentLine(var POSTransaction: Record "LSC POS Transaction"; var POSTransLine: Record "LSC POS Trans. Line"; var CurrInput: Text; var TenderTypeCode: Code[10]; Balance: decimal; PaymentAmount: Decimal; STATE: Code[10]; var isHandled: Boolean)
+    [EventSubscriber(ObjectType::Codeunit, Codeunit::"LSC POS Transaction Events", 'OnAfterInsertPaymentLine', '', false, false)]
+    internal procedure OnAfterInsertPaymentLine(var POSTransaction: Record "LSC POS Transaction"; var POSTransLine: Record "LSC POS Trans. Line"; var CurrInput: Text; var TenderTypeCode: Code[10]; var SkipCommit: Boolean)
     var
         LRecTT: Record "LSC Tender Type";
         LRecPOSTerm: Record "LSC POS Terminal";
@@ -45,12 +45,12 @@ codeunit 72101 WPEFTUtils
             lrecce.setrange("Transaction No.", POSTransaction."Retrieved from Trans. No.");
             LRecCE.setrange("Authorisation Ok", true);
             if LRecCE.FindFirst() then begin
-                TranType := StrSubstNo('DoVoid?HostName=%1&PortNo=%2&TimeOut=%3&TerminalID=%4&InvoiceID=%5&Amount=%6&MaxRetries=%7', LRecPOSTerm."VCB Host Name", LRecPOSTerm."VCB Port No", LRecPOSTerm."VCB Time Out", LRecPOSTerm."VCB Terminal ID", LRecCE."EFT Transaction ID", Format(PaymentAmount, 0, '<Integer>'), LRecPOSTerm."VCB Max Retries");
+                TranType := StrSubstNo('DoVoid?HostName=%1&PortNo=%2&TimeOut=%3&TerminalID=%4&InvoiceID=%5&Amount=%6&MaxRetries=%7', LRecPOSTerm."VCB Host Name", LRecPOSTerm."VCB Port No", LRecPOSTerm."VCB Time Out", LRecPOSTerm."VCB Terminal ID", LRecCE."EFT Transaction ID", Format(POSTransLine.Amount, 0, '<Integer>'), LRecPOSTerm."VCB Max Retries");
             end else begin
                 exit;
             end;
         end else begin
-            TranType := StrSubstNo('DoSales?HostName=%1&PortNo=%2&TimeOut=%3&TerminalID=%4&ReceiptNo=%5&Amount=%6&CurrencyCode=%7&MaxRetries=%8', LRecPOSTerm."VCB Host Name", LRecPOSTerm."VCB Port No", LRecPOSTerm."VCB Time Out", LRecPOSTerm."VCB Terminal ID", POSTransaction."Receipt No.", Format(PaymentAmount, 0, '<Integer>'), POSTransLine."Currency Code", LRecPOSTerm."VCB Max Retries");
+            TranType := StrSubstNo('DoSales?HostName=%1&PortNo=%2&TimeOut=%3&TerminalID=%4&ReceiptNo=%5&Amount=%6&CurrencyCode=%7&MaxRetries=%8', LRecPOSTerm."VCB Host Name", LRecPOSTerm."VCB Port No", LRecPOSTerm."VCB Time Out", LRecPOSTerm."VCB Terminal ID", POSTransaction."Receipt No.", Format(POSTransLine.Amount, 0, '<Integer>'), POSTransLine."Currency Code", LRecPOSTerm."VCB Max Retries");
         end;
         // Build the URL with parameters
         Url := StrSubstNo(LRecPOSTerm."VCB Payment Service URL", TranType);
@@ -60,7 +60,7 @@ codeunit 72101 WPEFTUtils
             ParseRespMsg(ResponseMsg);
             if gAMOUNT = '' then begin
                 // Handle error
-                POSGUI.PosMessage(StrSubstNo('Error: Invalid Auth. Amount "%1"\Expected Amount "%2"', gAMOUNT, format(PaymentAmount, 0, '<Integer>')));
+                POSGUI.PosMessage(StrSubstNo('Error: Invalid Auth. Amount "%1"\Expected Amount "%2"', gAMOUNT, format(POSTransLine.Amount, 0, '<Integer>')));
                 error('');
             end;
             if gerror = '' then begin

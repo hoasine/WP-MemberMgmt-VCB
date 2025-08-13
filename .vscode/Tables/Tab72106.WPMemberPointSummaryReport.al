@@ -20,7 +20,7 @@ table 72106 "WP Member Point Summary Report"
             Caption = 'Account No_';
             DataClassification = CustomerContent;
         }
-        field(3; "Phone No"; Text[15])
+        field(3; "Phone No"; Text[50])
         {
             Caption = 'Phone No';
             DataClassification = CustomerContent;
@@ -86,6 +86,11 @@ table 72106 "WP Member Point Summary Report"
             Caption = 'SMS';
             DataClassification = CustomerContent;
         }
+        // field(17; "DateFilter"; Date)
+        // {
+        //     Caption = 'DateFilter';
+        //     DataClassification = CustomerContent;
+        // }
     }
 
     keys

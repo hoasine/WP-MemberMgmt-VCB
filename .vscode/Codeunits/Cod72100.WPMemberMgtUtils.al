@@ -282,7 +282,7 @@ codeunit 72100 WPMemberMgtUtils
         LRecMem: Record "WP Member Information TKV";
     begin
         clear(LRecMem);
-        // LRecMem.SetRange(Processed, false);
+        LRecMem.SetRange(Processed, false);
         if lrecmem.FindFirst() then begin
             repeat
                 if LRecMem."membership_card_no" <> '' then begin
@@ -305,15 +305,25 @@ codeunit 72100 WPMemberMgtUtils
         LRecCon: Record "LSC Member Contact";
         LRecRS: Record "LSC Retail Setup";
         LAddr: text[200];
+        AccountStr: Text[100];
+        isSMS: Boolean;
     begin
         lrecrs.get;
         lrecrs.TestField("Def. Member Club");
         lrecrs.TestField("Def. Member Scheme");
 
+        //Bam chuoi tu 13 so lay 10 so
+        if strlen(Mem.membership_card_no) = 10 then
+            AccountStr := Mem.membership_card_no
+        else if strlen(Mem.membership_card_no) = 13 then begin
+            AccountStr := CopyStr(Mem.membership_card_no, 3, StrLen(Mem.membership_card_no) - 3);
+        end else
+            Error('Membership Card length:= %1 is incorrect. Length 10 or 13.', Mem.membership_card_no);
+
         clear(LRecAcc);
-        lrecacc.setrange("No.", mem.phone_no);
+        lrecacc.setrange("No.", AccountStr);
         if not lrecacc.FindFirst() then begin
-            lrecacc."No." := mem.phone_no;
+            lrecacc."No." := AccountStr;
             LRecAcc.Description := mem.name;
             LRecAcc."Club Code" := lrecrs."Def. Member Club";
             LRecAcc."Scheme Code" := lrecrs."Def. Member Scheme";
@@ -325,15 +335,23 @@ codeunit 72100 WPMemberMgtUtils
         end;
 
         clear(LRecCon);
-        lreccon.setrange("Account No.", mem.phone_no);
+        lreccon.setrange("Account No.", AccountStr);
         lreccon.setrange("Contact No.", mem.phone_no);
         if not lreccon.findfirst then begin
             //Create New Record
-            lreccon."Account No." := mem.phone_no;
+            lreccon."Account No." := AccountStr;
             lreccon."Contact No." := mem.phone_no;
             lreccon."Main Contact" := true;
             lreccon.Name := mem.name;
-            lreccon."Phone No." := mem.phone_no;
+            lreccon."Mobile Phone No." := mem.phone_no;
+
+            if mem."Agreed advertise SMS".ToUpper() = 'Y' then begin
+                isSMS := true;
+            end else begin
+                isSMS := false;
+            end;
+
+            lreccon."SMS" := isSMS;
             lreccon."E-Mail" := mem.email;
             lreccon."Club Code" := lrecrs."Def. Member Club";
             lreccon."Scheme Code" := lrecrs."Def. Member Scheme";
@@ -362,7 +380,15 @@ codeunit 72100 WPMemberMgtUtils
         end else begin
             //Update Record
             lreccon.Name := mem.name;
-            lreccon."Phone No." := mem.phone_no;
+            lreccon."Mobile Phone No." := mem.phone_no;
+
+            if mem."Agreed advertise SMS".ToUpper() = 'Y' then begin
+                isSMS := true;
+            end else begin
+                isSMS := false;
+            end;
+            lreccon."SMS" := isSMS;
+
             lreccon."E-Mail" := mem.email;
             case uppercase(copystr(mem.gender, 1, 1)) of
                 'M':
@@ -395,7 +421,7 @@ codeunit 72100 WPMemberMgtUtils
             LRecCard."Card No." := Mem."membership_card_no";
             LRecCard."Club Code" := lrecrs."Def. Member Club";
             LRecCard."Scheme Code" := lrecrs."Def. Member Scheme";
-            LRecCard."Account No." := Mem.phone_no;
+            LRecCard."Account No." := AccountStr;
             LRecCard."Contact No." := Mem.phone_no;
             LRecCard."Status" := LRecCard."Status"::Active;
             lreccard."Linked to Account" := true;
@@ -418,19 +444,27 @@ codeunit 72100 WPMemberMgtUtils
         LRecRS: record "LSC Retail Setup";
         LRecPts: Record "LSC Member Point Entry";
         LRecMU: Record "LSC Member Account Upgr. Entry";
+        AccountStr: Text[100];
     begin
         if lrecmem.FindFirst() then begin
             repeat
+                //Bam chuoi tu 13 so lay 10 so
+                if strlen(lrecmem.membership_card_no) = 10 then
+                    AccountStr := lrecmem.membership_card_no
+                else if strlen(lrecmem.membership_card_no) = 13 then begin
+                    AccountStr := CopyStr(lrecmem.membership_card_no, 3, StrLen(lrecmem.membership_card_no) - 3);
+                end;
+
                 clear(lreccar);
                 lreccar.setrange("Card No.", lrecmem."membership_card_no");
                 lreccar.deleteall;
 
                 clear(lreccon);
-                lreccon.setrange("Account No.", lrecmem.phone_no);
+                lreccon.setrange("Account No.", AccountStr);
                 lreccon.deleteall;
 
                 clear(lrecacc);
-                lrecacc.setrange("No.", lrecmem.phone_no);
+                lrecacc.setrange("No.", AccountStr);
                 lrecacc.deleteall;
 
                 clear(LRecPts);
@@ -438,7 +472,7 @@ codeunit 72100 WPMemberMgtUtils
                 lrecpts.deleteall;
 
                 clear(LRecMU);
-                lrecmu.setrange("Account No.", lrecmem.phone_no);
+                lrecmu.setrange("Account No.", AccountStr);
                 lrecmu.deleteall;
 
                 lrecmem.Processed := false;

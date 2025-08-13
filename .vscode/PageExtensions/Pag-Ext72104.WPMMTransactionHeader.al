@@ -10,6 +10,10 @@ pageextension 72104 WPMMTransactionHeader extends "LSC Transaction Card"
             {
                 ApplicationArea = All;
             }
+            field("Is Print of Copy"; Rec."Is Print of Copy")
+            {
+                ApplicationArea = All;
+            }
         }
     }
 }

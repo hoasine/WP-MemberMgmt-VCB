@@ -76,10 +76,6 @@ xmlport 72101 "WP Member Points Export"
 
             tableelement(LSCMemberPointEntry; "LSC Member Point Entry")
             {
-                // AutoSave = true;
-                // AutoUpdate = true;
-                // XmlName = 'LSCMemberPointEntry';
-                // SourceTableView = sorting("Account No.", "Entry Type", "Point Type", Date);
                 textelement(Blandtxt)
                 {
                 }
@@ -92,22 +88,36 @@ xmlport 72101 "WP Member Points Export"
                 fieldelement(DocumentNo; LSCMemberPointEntry."Document No.")
                 {
                 }
-                fieldelement(Points; LSCMemberPointEntry.Points)
+                textelement(txn_point)
+                {
+                }
+                textelement(Ref_id)
                 {
                 }
                 textelement(DateTxt)
                 {
                 }
-                textelement(SystemCreatedAtTxt)
-                {
-                }
                 textelement(DescriptionTxt)
                 {
                 }
+
+                trigger OnPreXmlItem()
+                begin
+                    if DateFilter = 0D then begin
+                        DateFilter := Today()
+                    end;
+
+                    LSCMemberPointEntry.setrange("Date", DateFilter);
+                    LSCMemberPointEntry.SetFilter("Card No.", '<>1000010101020099');
+                end;
+
                 trigger OnAfterGetRecord()
                 var
                     LRecTSE: record "LSC Trans. Sales Entry";
+                    tbMembeShipCard: Record "LSC Membership Card";
                 begin
+                    txn_point := FORMAT(LSCMemberPointEntry."Points", 0, '<Integer>');
+
                     clear(LRecTSE);
                     lrecTSE.setrange("Store No.", LSCMemberPointEntry."Store No.");
                     lrectse.setrange("POS Terminal No.", LSCMemberPointEntry."POS Terminal No.");
@@ -117,18 +127,51 @@ xmlport 72101 "WP Member Points Export"
                         DescriptionTxt := lrectse."Item Description";
                     end;
 
+                    if LSCMemberPointEntry."Card No." = '' then begin
+                        Clear(tbMembeShipCard);
+                        tbMembeShipCard.SetRange("Account No.", LSCMemberPointEntry."Account No.");
+                        if tbMembeShipCard.FindFirst() then begin
+                            LSCMemberPointEntry."Card No." := tbMembeShipCard."Card No.";
+                        end;
+                    end else begin
+                        LSCMemberPointEntry."Card No." := LSCMemberPointEntry."Card No.";
+                    end;
+
                     if LSCMemberPointEntry.Points < 0 then
                         txnType := 'SPEND'
                     else
                         txnType := 'GRANT';
 
-                    DateTxt := FORMAT(LSCMemberPointEntry."Date", 0, '<Year4><Month,2><Day,2>');
-                    SystemCreatedAtTxt := format(LSCMemberPointEntry.SystemCreatedAt, 0, '<Month,2>/<Day,2>/<Year4> <Hour,2>:<Minute,2>');
+                    Ref_id := FORMAT(LSCMemberPointEntry."Date", 0, '<Day,2><Month,2>')
+                    + LSCMemberPointEntry."POS Terminal No."
+                    + Format(LSCMemberPointEntry."Transaction No.")
+                    + Format(LSCMemberPointEntry."Entry No."); //ngày tháng pos tran 0408302trans store 
 
-                    if (LSCMemberPointEntry.Date <> today()) or (LSCMemberPointEntry.Points = 0) then
+                    currXMLport.Filename := format(LSCMemberPointEntry."Date", 0, '<Year4><Month,2><Day,2>') + '_txn-history-point-list.csv';
+
+                    DateTxt := format(LSCMemberPointEntry.SystemCreatedAt, 0, '<Year4>-<Month,2>-<Day,2> <Hour,2>:<Minute,2>:00');
+
+                    if (LSCMemberPointEntry.Points = 0) then
+                        // if (LSCMemberPointEntry.Date <> today()) or (LSCMemberPointEntry.Points = 0) then
                         currXMLport.Skip();
 
                 end;
+            }
+        }
+    }
+    requestpage
+    {
+        layout
+        {
+            area(Content)
+            {
+                group(Option)
+                {
+                    field("Date"; DateFilter)
+                    {
+
+                    }
+                }
             }
         }
     }
@@ -155,10 +198,8 @@ xmlport 72101 "WP Member Points Export"
             else
                 error('');
 
-        Clear(LSCMemberPointEntry);
-        LSCMemberPointEntry.setrange("Date", today());
-        LSCMemberPointEntry.setrange("Entry No.", grecrs."Last Point Entry No.", LastEntryNo);
-        currXMLport.Filename := format(CurrentDateTime, 0, '<Year4><Month,2><Day,2>_<Hour,2><Minute,2><Second,2>') + '_txn-history-point-list.csv';
+        // LSCMemberPointEntry.setrange("Entry No.", grecrs."Last Point Entry No.", LastEntryNo);
+
     end;
 
     trigger OnPostXmlPort()
@@ -172,4 +213,5 @@ xmlport 72101 "WP Member Points Export"
     var
         GRecRS: Record "LSC Retail Setup";
         LastEntryNo: Integer;
+        DateFilter: Date;
 }

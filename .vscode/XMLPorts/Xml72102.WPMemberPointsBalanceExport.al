@@ -112,40 +112,40 @@ xmlport 72102 "WP Member P Balance Export"
                 }
             }
 
-            tableelement(TempSummaryRec; "WP Member Point Summary Report")
+            tableelement(TempSummary; "WP Member Point Summary Report")
             {
                 textelement(Blandtxt)
                 {
                 }
-                fieldelement(CardNo; TempSummaryRec."Card No.")
+                fieldelement(CardNo; TempSummary."Card No.")
                 {
                     Description = 'membership_card_no';
                 }
-                fieldelement(CardNoDisplay; TempSummaryRec."Card No.")
+                fieldelement(CardNoDisplay; TempSummary."Card No.")
                 {
                     Description = 'membership_card_display';
                 }
-                fieldelement(PhoneNo; TempSummaryRec."Phone No")
+                fieldelement(PhoneNo; TempSummary."Phone No")
                 {
                     Description = 'phone_no';
                 }
-                fieldelement(Name; TempSummaryRec.Name)
+                fieldelement(Name; TempSummary.Name)
                 {
                     Description = 'name';
                 }
-                fieldelement(Email; TempSummaryRec.Email)
+                fieldelement(Email; TempSummary.Email)
                 {
                     Description = 'email';
                 }
-                fieldelement(Address; TempSummaryRec.Address)
+                fieldelement(Address; TempSummary.Address)
                 {
                     Description = 'address';
                 }
-                fieldelement(TierCode; TempSummaryRec."Tier Code")
+                fieldelement(TierCode; TempSummary."Tier Code")
                 {
                     Description = 'tier_code';
                 }
-                fieldelement(TotalPoint; TempSummaryRec."Total Point")
+                fieldelement(TotalPoint; TempSummary."Total Point")
                 {
                     Description = 'current_point';
                 }
@@ -157,21 +157,37 @@ xmlport 72102 "WP Member P Balance Export"
                 {
                     Description = 'expire_vip_date';
                 }
-                fieldelement(VipProcessing; TempSummaryRec."Vip Processing")
+                fieldelement(VipProcessing; TempSummary."Vip Processing")
                 {
                     Description = 'vip_processing';
                 }
 
-                fieldelement(SMS; TempSummaryRec."SMS")
+                fieldelement(SMS; TempSummary."SMS")
                 {
                     Description = 'sms';
                 }
 
                 trigger OnAfterGetRecord()
                 begin
-                    ExpirePointDatetxt := FORMAT(TempSummaryRec."Expire Point Date", 0, '<Year4><Month,2><Day,2>');
-                    ExpireVipDatetxt := FORMAT(TempSummaryRec."Expire Vip Date", 0, '<Year4><Month,2><Day,2>');
+                    ExpirePointDatetxt := FORMAT(TempSummary."Expire Point Date", 0, '<Year4><Month,2><Day,2>');
+                    ExpireVipDatetxt := FORMAT(TempSummary."Expire Vip Date", 0, '<Year4><Month,2><Day,2>');
                 end;
+            }
+        }
+    }
+    requestpage
+    {
+        layout
+        {
+            area(Content)
+            {
+                group(Option)
+                {
+                    field("Date"; DateFilter)
+                    {
+
+                    }
+                }
             }
         }
     }
@@ -180,8 +196,6 @@ xmlport 72102 "WP Member P Balance Export"
         LRecMemberConact: Record "LSC Member Contact";
         LRecMemberPoints: Record "LSC Member Point Entry";
         LRecMemberPointsTotal: Record "LSC Member Point Entry";
-
-        TempSummary: Record "WP Member Point Summary Report";
         LRecMemberSaleEntry: Record "LSC Member Sales Entry";
         MemberAttributesRec: Record "LSC Member Attribute Value";
 
@@ -189,28 +203,37 @@ xmlport 72102 "WP Member P Balance Export"
     var
         begindate: Date;
         enddate: Date;
-
+        ConvertedDate: Date;
+        check: Decimal;
+        tbMembeShipCard: Record "LSC Membership Card";
     begin
-        currXMLport.Filename := format(CurrentDateTime, 0, '<Year4><Month,2><Day,2>_<Hour,2><Minute,2><Second,2>') + '_member-list.csv';
+        if DateFilter = 0D then begin
+            DateFilter := Today()
+        end;
 
-        // Clear temporary summary table
+        currXMLport.Filename := format(DateFilter, 0, '<Year4><Month,2><Day,2>') + '_member-list.csv';
+
         TempSummary.Reset();
         TempSummary.DeleteAll();
-        Commit();
 
         Clear(LRecMemberPoints);
-
-        LRecMemberPoints.setrange("Date", today());
+        LRecMemberPoints.setrange("Date", DateFilter);
         LRecMemberPoints.SETFILTER("Remaining Points", '>%1', 0);
+        LRecMemberPoints.SetFilter("Card No.", '<>1000010101020099');
+
         // LRecMemberPoints.setrange("Account No.", '0327390810');
 
-        if (TempSummaryRec."Card No." <> '') then begin
-            LRecMemberPoints.setrange("Card No.", TempSummaryRec."Card No.");
-        end;
+        // if (TempSummary."DateCreate" = 0DT) then begin
+        //     LRecMemberPoints.setrange("Date", 0D);
+        // end;
 
-        if (TempSummaryRec."Account No_" <> '') then begin
-            LRecMemberPoints.setrange("Account No.", TempSummaryRec."Account No_");
-        end;
+        // if (TempSummary."Card No." <> '') then begin
+        //     LRecMemberPoints.setrange("Card No.", TempSummary."Card No.");
+        // end;
+
+        // if (TempSummary."Account No_" <> '') then begin
+        //     LRecMemberPoints.setrange("Account No.", TempSummary."Account No_");
+        // end;
 
         if LRecMemberPoints.FindSet() then begin
             repeat
@@ -227,13 +250,23 @@ xmlport 72102 "WP Member P Balance Export"
 
                     TempSummary.DateCreate := CurrentDateTime();
                     TempSummary.ID := CreateGuid();
-                    TempSummary."Card No." := LRecMemberPoints."Card No.";
+
+                    if LRecMemberPoints."Card No." = '' then begin
+                        Clear(tbMembeShipCard);
+                        tbMembeShipCard.SetRange("Account No.", LRecMemberPoints."Account No.");
+                        if tbMembeShipCard.FindFirst() then begin
+                            TempSummary."Card No." := tbMembeShipCard."Card No.";
+                        end;
+                    end else begin
+                        TempSummary."Card No." := LRecMemberPoints."Card No.";
+                    end;
+
                     TempSummary."Account No_" := LRecMemberPoints."Account No.";
-                    TempSummary."Phone No" := LRecMemberConact."Phone No.";
+                    TempSummary."Phone No" := LRecMemberConact."Mobile Phone No.";
                     TempSummary.Name := LRecMemberConact.Name;
                     TempSummary.Address := LRecMemberConact.Address;
-                    TempSummary."Tier Code" := LRecMemberConact."Scheme Code";
-                    TempSummary."Total Point" := 0;
+                    TempSummary."Tier Code" := tbMembeShipCard."Scheme Code";
+                    TempSummary."Total Point" := '0';
                     TempSummary.SMS := LRecMemberConact.SMS;
 
                     clear(MemberAttributesRec);
@@ -266,16 +299,19 @@ xmlport 72102 "WP Member P Balance Export"
                     clear(LRecMemberPointsTotal);
                     LRecMemberPointsTotal.setrange("Account No.", LRecMemberPoints."Account No.");
                     LRecMemberPointsTotal.CalcSums("Remaining Points");
+
                     TempSummary."Total Point" := LRecMemberPointsTotal."Remaining Points";
-
                     TempSummary.Insert();
-                    Commit();
                 end;
-
-                // TempSummary."Total Point" += LRecMemberPoints."Remaining Points";
-                // TempSummary.Modify();
-                Commit();
             until LRecMemberPoints.Next() = 0;
         end;
+
+        TempSummary.Reset();
+        check := TempSummary.Count();
     end;
+
+    var
+        DateFilter: Date;
+        DateFilterTxt: text[250];
+
 }

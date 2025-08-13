@@ -90,7 +90,7 @@ codeunit 72102 CommandPos
                                     LRecCE."Transaction No." := Transaction."Transaction No.";
                                     lrecce."POS Terminal No." := Transaction."POS Terminal No.";
                                     LRecCE."Entry No." := nextEntryNo;
-                                    lrecce."Line No." := number * 1000;
+                                    lrecce."Line No." := origPosEntry."Line No.";//Gắn lại line No
                                     LRecCE."Receipt No." := Transaction."Receipt No.";
                                     lrecce."Tender Type" := origPosEntry."Tender Type";
                                     if Transaction."Sale Is Return Sale" then
