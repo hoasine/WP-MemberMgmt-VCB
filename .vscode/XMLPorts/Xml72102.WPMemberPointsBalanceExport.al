@@ -117,7 +117,7 @@ xmlport 72102 "WP Member P Balance Export"
                 textelement(Blandtxt)
                 {
                 }
-                fieldelement(CardNo; TempSummary."Card No.")
+                fieldelement(CardNo; TempSummary."Account No_")
                 {
                     Description = 'membership_card_no';
                 }
@@ -145,7 +145,7 @@ xmlport 72102 "WP Member P Balance Export"
                 {
                     Description = 'tier_code';
                 }
-                fieldelement(TotalPoint; TempSummary."Total Point")
+                fieldelement(TotalPointtxt; TempSummary."Total Point Txt")
                 {
                     Description = 'current_point';
                 }
@@ -161,12 +161,10 @@ xmlport 72102 "WP Member P Balance Export"
                 {
                     Description = 'vip_processing';
                 }
-
                 fieldelement(SMS; TempSummary."SMS")
                 {
                     Description = 'sms';
                 }
-
                 trigger OnAfterGetRecord()
                 begin
                     ExpirePointDatetxt := FORMAT(TempSummary."Expire Point Date", 0, '<Year4><Month,2><Day,2>');
@@ -259,6 +257,12 @@ xmlport 72102 "WP Member P Balance Export"
                         end;
                     end else begin
                         TempSummary."Card No." := LRecMemberPoints."Card No.";
+
+                        Clear(tbMembeShipCard);
+                        tbMembeShipCard.SetRange("Card No.", TempSummary."Card No.");
+                        if tbMembeShipCard.FindFirst() then begin
+                            // TempSummary."Card No." := tbMembeShipCard."Card No.";
+                        end;
                     end;
 
                     TempSummary."Account No_" := LRecMemberPoints."Account No.";
@@ -301,6 +305,7 @@ xmlport 72102 "WP Member P Balance Export"
                     LRecMemberPointsTotal.CalcSums("Remaining Points");
 
                     TempSummary."Total Point" := LRecMemberPointsTotal."Remaining Points";
+                    TempSummary."Total Point Txt" := Format(ABS(LRecMemberPointsTotal."Remaining Points"), 0, '<Integer>');
                     TempSummary.Insert();
                 end;
             until LRecMemberPoints.Next() = 0;

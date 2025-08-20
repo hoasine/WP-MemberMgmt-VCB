@@ -116,7 +116,7 @@ xmlport 72101 "WP Member Points Export"
                     LRecTSE: record "LSC Trans. Sales Entry";
                     tbMembeShipCard: Record "LSC Membership Card";
                 begin
-                    txn_point := FORMAT(LSCMemberPointEntry."Points", 0, '<Integer>');
+                    txn_point := FORMAT(ABS(LSCMemberPointEntry."Points"), 0, '<Integer>');
 
                     clear(LRecTSE);
                     lrecTSE.setrange("Store No.", LSCMemberPointEntry."Store No.");

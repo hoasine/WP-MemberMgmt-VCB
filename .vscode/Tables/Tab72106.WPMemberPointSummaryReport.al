@@ -60,6 +60,7 @@ table 72106 "WP Member Point Summary Report"
             Caption = 'Total Point';
             DataClassification = CustomerContent;
         }
+
         field(11; "Email"; Text[100])
         {
             Caption = 'Email';
@@ -80,10 +81,14 @@ table 72106 "WP Member Point Summary Report"
             Caption = 'SystemCreatedAtTxt';
             DataClassification = CustomerContent;
         }
-
         field(16; "SMS"; Boolean)
         {
             Caption = 'SMS';
+            DataClassification = CustomerContent;
+        }
+        field(17; "Total Point Txt"; Text[500])
+        {
+            Caption = 'TotalPointTxt';
             DataClassification = CustomerContent;
         }
         // field(17; "DateFilter"; Date)
