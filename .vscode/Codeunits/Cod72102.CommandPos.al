@@ -92,7 +92,8 @@ codeunit 72102 CommandPos
                                     LRecCE."Entry No." := nextEntryNo;
                                     lrecce."Line No." := origPosEntry."Line No.";//Gắn lại line No
                                     LRecCE."Receipt No." := Transaction."Receipt No.";
-                                    lrecce."Tender Type" := origPosEntry."Tender Type";
+                                    //lrecce."Tender Type" := origPosEntry."Tender Type";
+                                    lrecce."Tender Type" := CopyStr(origPosEntry."Tender Type", 1, 10);
                                     if Transaction."Sale Is Return Sale" then
                                         LRecCE."Transaction Type" := LRecCE."Transaction Type"::"Void Sale"
                                     else

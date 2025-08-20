@@ -78,7 +78,8 @@ codeunit 72101 WPEFTUtils
                 LRecCE."Entry No." := nextEntryNo;
                 lrecce."Line No." := POSTransLine."Line No.";
                 LRecCE."Receipt No." := POSTransaction."Receipt No.";
-                lrecce."Tender Type" := TenderTypeCode;
+                //lrecce."Tender Type" := TenderTypeCode;
+                lrecce."Tender Type" := CopyStr(TenderTypeCode, 1, 10);
                 if POSTransaction."Sale Is Return Sale" then
                     LRecCE."Transaction Type" := LRecCE."Transaction Type"::"Void Sale"
                 else
