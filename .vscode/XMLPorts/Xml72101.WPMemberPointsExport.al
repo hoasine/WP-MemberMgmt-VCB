@@ -5,7 +5,7 @@ xmlport 72101 "WP Member Points Export"
     Direction = Export;
     TextEncoding = UTF8;
     TableSeparator = '<NewLine>';
-    FieldSeparator = ',';
+    FieldSeparator = ';';
     FileName = 'txn-history-point-list.csv';
 
     schema
