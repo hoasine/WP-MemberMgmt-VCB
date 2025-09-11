@@ -106,6 +106,27 @@ codeunit 72100 WPMemberMgtUtils
             exit(false);
     end;
 
+    local procedure InsertMemberSale(tbMemberPoint: record "LSC Member Point Entry"): Boolean
+    var
+        tbMemberSale: Record "LSC Member Sales Entry";
+        tbMemberSaleInsert: Record "LSC Member Sales Entry";
+    begin
+        Clear(tbMemberSale);
+        tbMemberSale.SetRange("Store No.", tbMemberPoint."Store No.");
+        tbMemberSale.SetRange("POS Terminal No.", tbMemberPoint."POS Terminal No.");
+        tbMemberSale.SetRange("Transaction No.", tbMemberPoint."Transaction No.");
+        if tbMemberSale.FindSet() then begin
+            repeat
+                Clear(tbMemberSaleInsert);
+                tbMemberSaleInsert.Copy(tbMemberSale);
+                tbMemberSaleInsert."Member Account No." := tbMemberPoint."Account No.";
+                tbMemberSaleInsert."Member Contact No." := tbMemberPoint."Contact No.";
+                tbMemberSaleInsert."Member Card No." := tbMemberPoint."Card No.";
+                tbMemberSaleInsert.Insert();
+            until tbMemberSale.Next() = 0;
+        end;
+    end;
+
     local procedure InsertLineIsProcessed(PRecTIC: record "LSC Trans. Infocode Entry"): Boolean
     var
         LRecTICE: record "WP Trans. Infocode Status";
@@ -232,6 +253,7 @@ codeunit 72100 WPMemberMgtUtils
                             lrecic.modify;
 
                             InsertLineIsProcessed(LRecIC);
+                            // InsertMemberSale(lrecmp);
                             NoOfLines += 1;
                         end;
                     end;

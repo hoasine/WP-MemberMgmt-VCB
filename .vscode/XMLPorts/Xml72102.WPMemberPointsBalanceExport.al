@@ -204,6 +204,12 @@ xmlport 72102 "WP Member P Balance Export"
         ConvertedDate: Date;
         check: Decimal;
         tbMembeShipCard: Record "LSC Membership Card";
+
+        CurrentDateY: Date;
+        StartDateY: Date;
+        EndDateY: Date;
+        YearOfInputY: Integer;
+        DateYFilter: text;
     begin
         if DateFilter = 0D then begin
             DateFilter := Today()
@@ -242,7 +248,17 @@ xmlport 72102 "WP Member P Balance Export"
                     LRecMemberConact.setrange("Account No.", LRecMemberPoints."Account No.");
                     LRecMemberConact.FindFirst();
 
+                    CurrentDateY := Today; // hoặc WorkDate nếu bạn muốn theo ngày làm việc
+                    YearOfInputY := DATE2DMY(CurrentDateY, 3); // lấy năm
+
+                    StartDateY := DMY2DATE(1, 1, YearOfInputY);
+                    EndDateY := DMY2DATE(31, 12, YearOfInputY);
+
+                    DateYFilter := Format(StartDateY, 0, '<Day,2>/<Month,2>/<Year4>') + '..' +
+                         Format(EndDateY, 0, '<Day,2>/<Month,2>/<Year4>');
+
                     clear(LRecMemberSaleEntry);
+                    LRecMemberSaleEntry.SetFilter(Date, DateYFilter);
                     LRecMemberSaleEntry.setrange("Member Account No.", LRecMemberPoints."Account No.");
                     LRecMemberSaleEntry.CalcSums("Gross Amount");
 

@@ -116,16 +116,23 @@ xmlport 72101 "WP Member Points Export"
                     LRecTSE: record "LSC Trans. Sales Entry";
                     tbMembeShipCard: Record "LSC Membership Card";
                 begin
+                    Clear(txnType);
+                    Clear(txn_point);
+                    Clear(Ref_id);
+                    Clear(DateTxt);
+                    Clear(DescriptionTxt);
+
                     txn_point := FORMAT(ABS(LSCMemberPointEntry."Points"), 0, '<Integer>');
 
                     clear(LRecTSE);
                     lrecTSE.setrange("Store No.", LSCMemberPointEntry."Store No.");
                     lrectse.setrange("POS Terminal No.", LSCMemberPointEntry."POS Terminal No.");
                     lrectse.setrange("Transaction No.", LSCMemberPointEntry."Transaction No.");
-                    if lrectse.findfirst then begin
+                    if lrectse.FindSet() then begin
                         lrectse.CalcFields("Item Description");
                         DescriptionTxt := lrectse."Item Description";
-                    end;
+                    end else
+                        DescriptionTxt := '';
 
                     if LSCMemberPointEntry."Card No." = '' then begin
                         Clear(tbMembeShipCard);
