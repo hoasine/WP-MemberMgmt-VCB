@@ -78,7 +78,7 @@ codeunit 72102 CommandPos
                                 end;
                                 if gerror = '' then begin
                                     clear(LRecCE);
-
+                                    LRecCE.setrange("Store No.", Transaction."Store No.");
                                     LRecCE.setrange("Pos Terminal No.", Transaction."POS Terminal No.");
                                     if LRecCE.FindLast() then
                                         nextEntryNo := LRecCE."Entry No." + 1
@@ -124,10 +124,6 @@ codeunit 72102 CommandPos
                                     lrecce."EFT Additional ID" := gSERIAL_NUMBER;
                                     lrecce."Auth. Source Code" := gPROC_CODE;
                                     lrecce."Extra Data" := origPosEntry."Extra Data";
-                                    //origPosEntry."Voided Slip No." := Transaction."Receipt No.";
-                                    //origPosEntry.Voided := true;
-
-                                    origPosEntry.Modify(true);
 
                                     LRecCE.INSERT(true);
                                 end else begin
