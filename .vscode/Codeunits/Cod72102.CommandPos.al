@@ -78,7 +78,7 @@ codeunit 72102 CommandPos
                                 end;
                                 if gerror = '' then begin
                                     clear(LRecCE);
-                                    LRecCE.setrange("Store No.", Transaction."Store No.");
+
                                     LRecCE.setrange("Pos Terminal No.", Transaction."POS Terminal No.");
                                     if LRecCE.FindLast() then
                                         nextEntryNo := LRecCE."Entry No." + 1
@@ -104,11 +104,14 @@ codeunit 72102 CommandPos
                                         LRecCE."Authorisation Ok" := true;
                                     LRecCE."Card Number" := origPosEntry."Card Number";
                                     lrecce."Card Type" := origPosEntry."Card Type";
+                                    LRecCE."Card Type Name" := origPosEntry."Card Type Name";
+                                    LRecCE."Card Class" := origPosEntry."Card Class";
                                     LRecCE."Res.code" := gRESPONSE_CODE;
                                     lrecce."EFT Auth.code" := gAPPV_CODE;
                                     lrecce."EFT Merchant No." := gMERCHANT_CODE;
                                     lrecce."EFT Trans. Date" := gDATE;
                                     lrecce."EFT Trans. Time" := gTIME;
+                                    LRecCE."Transaction Type" := LRecCE."Transaction Type"::"Void Sale";
                                     if gAMOUNT <> '' then begin
                                         gAMOUNT := '-' + gAMOUNT;
                                         Evaluate(LRecCE.Amount, gamount);
@@ -121,6 +124,11 @@ codeunit 72102 CommandPos
                                     lrecce."EFT Additional ID" := gSERIAL_NUMBER;
                                     lrecce."Auth. Source Code" := gPROC_CODE;
                                     lrecce."Extra Data" := origPosEntry."Extra Data";
+                                    //origPosEntry."Voided Slip No." := Transaction."Receipt No.";
+                                    //origPosEntry.Voided := true;
+
+                                    origPosEntry.Modify(true);
+
                                     LRecCE.INSERT(true);
                                 end else begin
                                     // Handle error
@@ -218,9 +226,24 @@ codeunit 72102 CommandPos
 
             //update lại receipt return sau khi Credit Card
             clear(LRecCE);
+            //LRecCE.SetRange("Receipt No.", POSTransaction."Receipt No.");
             LRecCE.SetRange("Receipt No.", OriginalTransaction."Receipt No.");
-            LRecCE.SetFilter("Line No.", '<>0');
+            LRecCE.SetFilter("Transaction Type", '<>2');
             LRecCE.SetRange("Store No.", OriginalTransaction."Store No.");
+            LRecCE.SetRange("POS Terminal No.", OriginalTransaction."POS Terminal No.");
+            if LRecCE.FindSet() then begin
+                repeat
+                    LRecCE."Voided Slip No." := POSTransaction."Receipt No.";
+                    LRecCE.Voided := true;
+                    LRecCE.Modify();
+                until LRecCE.Next() = 0;
+            end;
+
+            clear(LRecCE);
+            //LRecCE.SetRange("Receipt No.", POSTransaction."Receipt No.");
+            LRecCE.SetRange("Receipt No.", OriginalTransaction."Receipt No.");
+            LRecCE.SetRange("Store No.", OriginalTransaction."Store No.");
+            LRecCE.SetRange("Transaction Type", LRecCE."Transaction Type"::"Void Sale");
             LRecCE.SetRange("POS Terminal No.", OriginalTransaction."POS Terminal No.");
             if LRecCE.FindSet() then begin
                 repeat

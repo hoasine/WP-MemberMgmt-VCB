@@ -9,12 +9,14 @@ codeunit 72101 WPEFTUtils
         LRecTT: Record "LSC Tender Type";
         LRecPOSTerm: Record "LSC POS Terminal";
         LRecCE: record "LSC POS Card Entry";
+        LRecCETemp: record "LSC POS Card Entry";
+        LRecTCS: record "LSC Tender Type Card Setup";
         URL: text;
         TranType: text;
         ResponseMsg: text;
         nextEntryNo: Integer;
+        cardPrefix: Code[10];
     begin
-
         clear(LRecPOSTerm);
         LRecPOSTerm.setrange("Store No.", POSTransaction."Store No.");
         LRecPOSTerm.setrange("No.", POSTransaction."POS Terminal No.");
@@ -65,6 +67,7 @@ codeunit 72101 WPEFTUtils
             end;
             if gerror = '' then begin
                 clear(LRecCE);
+                LRecCE.Reset();
                 LRecCE.setrange("Store No.", POSTransaction."Store No.");
                 LRecCE.setrange("Pos Terminal No.", POSTransaction."POS Terminal No.");
                 if LRecCE.FindLast() then
@@ -72,22 +75,23 @@ codeunit 72101 WPEFTUtils
                 else
                     nextEntryNo := 1;
 
-                clear(LRecCE);
+
                 LRecCE."Store No." := POSTransaction."Store No.";
                 lrecce."POS Terminal No." := POSTransaction."POS Terminal No.";
                 LRecCE."Entry No." := nextEntryNo;
                 lrecce."Line No." := POSTransLine."Line No.";
                 LRecCE."Receipt No." := POSTransaction."Receipt No.";
+
                 //lrecce."Tender Type" := TenderTypeCode;
                 lrecce."Tender Type" := CopyStr(TenderTypeCode, 1, 10);
-                if POSTransaction."Sale Is Return Sale" then
-                    LRecCE."Transaction Type" := LRecCE."Transaction Type"::"Void Sale"
-                else
-                    LRecCE."Transaction Type" := LRecCE."Transaction Type"::Sale;
-                LRecCE.Date := today;
-                lrecce.Time := time;
+                /*  if POSTransaction."Sale Is Return Sale" then
+                     LRecCE."Transaction Type" := LRecCE."Transaction Type"::"Void Sale"
+                 else
+                     LRecCE."Transaction Type" := LRecCE."Transaction Type"::Sale;
+                 LRecCE.Date := today;
+                 lrecce.Time := time; */
                 if gRESPONSE_CODE = '00' then
-                    LRecCE."Authorisation Ok" := true;
+                    LRecCE."Transaction Type" := LRecCE."Transaction Type"::Sale;
                 LRecCE."Card Number" := gPAN;
                 lrecce."Card Type" := gCARD_TYPE;
                 LRecCE."Res.code" := gRESPONSE_CODE;
@@ -105,9 +109,24 @@ codeunit 72101 WPEFTUtils
                 lrecce."EFT Additional ID" := gSERIAL_NUMBER;
                 lrecce."Auth. Source Code" := gPROC_CODE;
                 lrecce."Extra Data" := gNAME;
+                if LRecCE."Card Number" <> '' then begin
+                    cardPrefix := CopyStr(LRecCE."Card Number", 1, 9);
+                    clear(LRecTCS);
+                    LRecTCS.SetRange("Card No.", cardPrefix);
+                    if LRecTCS.FindFirst() then begin
+                        LRecCE."Card Type Name" := LRecTCS.Description;
+                        LRecCE."Card Class" := LRecTCS."Tender Point";
+                    end else begin
+                        LRecCE."Card Type Name" := 'No Name';
+                    end;
+                end;
+
+                LRecCE.Date := today;
+                lrecce.Time := time;
+                LRecCE."Authorisation Ok" := true;
                 LRecCE.INSERT(true);
             end else begin
-                // Handle error
+                // Handle errorW
                 POSGUI.PosMessage(StrSubstNo('Error: %1', gERROR));
                 error('');
             end;
