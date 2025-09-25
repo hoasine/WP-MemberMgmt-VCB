@@ -157,7 +157,7 @@ xmlport 72102 "WP Member P Balance Export"
                 {
                     Description = 'expire_vip_date';
                 }
-                fieldelement(VipProcessing; TempSummary."Vip Processing")
+                fieldelement(VipProcessing; TempSummary."Vip Processing Txt")
                 {
                     Description = 'vip_processing';
                 }
@@ -193,8 +193,9 @@ xmlport 72102 "WP Member P Balance Export"
     var
         LRecMemberConact: Record "LSC Member Contact";
         LRecMemberPoints: Record "LSC Member Point Entry";
+        LRecMemberPointsSale: Record "LSC Member Point Entry";
         LRecMemberPointsTotal: Record "LSC Member Point Entry";
-        LRecMemberSaleEntry: Record "LSC Member Sales Entry";
+        LRecTransSaleEntry: Record "LSC Trans. Sales Entry";
         MemberAttributesRec: Record "LSC Member Attribute Value";
 
     trigger OnPreXmlPort()
@@ -211,6 +212,8 @@ xmlport 72102 "WP Member P Balance Export"
         YearOfInputY: Integer;
         DateYFilter: text;
     begin
+        // EVALUATE(begindate, '342342343');
+
         if DateFilter = 0D then begin
             DateFilter := Today()
         end;
@@ -225,7 +228,7 @@ xmlport 72102 "WP Member P Balance Export"
         LRecMemberPoints.SETFILTER("Remaining Points", '>%1', 0);
         LRecMemberPoints.SetFilter("Card No.", '<>1000010101020099');
 
-        // LRecMemberPoints.setrange("Account No.", '0327390810');
+        // LRecMemberPoints.setrange("Account No.", '1000013322');
 
         // if (TempSummary."DateCreate" = 0DT) then begin
         //     LRecMemberPoints.setrange("Date", 0D);
@@ -246,83 +249,102 @@ xmlport 72102 "WP Member P Balance Export"
                     TempSummary.Init();
                     clear(LRecMemberConact);
                     LRecMemberConact.setrange("Account No.", LRecMemberPoints."Account No.");
-                    LRecMemberConact.FindFirst();
+                    if LRecMemberConact.FindFirst() then begin
+                        CurrentDateY := Today; // hoặc WorkDate nếu bạn muốn theo ngày làm việc
+                        YearOfInputY := DATE2DMY(CurrentDateY, 3); // lấy năm
 
-                    CurrentDateY := Today; // hoặc WorkDate nếu bạn muốn theo ngày làm việc
-                    YearOfInputY := DATE2DMY(CurrentDateY, 3); // lấy năm
+                        StartDateY := DMY2DATE(1, 1, YearOfInputY);
+                        EndDateY := DMY2DATE(31, 12, YearOfInputY);
 
-                    StartDateY := DMY2DATE(1, 1, YearOfInputY);
-                    EndDateY := DMY2DATE(31, 12, YearOfInputY);
+                        DateYFilter := Format(StartDateY, 0, '<Day,2>/<Month,2>/<Year4>') + '..' +
+                             Format(EndDateY, 0, '<Day,2>/<Month,2>/<Year4>');
 
-                    DateYFilter := Format(StartDateY, 0, '<Day,2>/<Month,2>/<Year4>') + '..' +
-                         Format(EndDateY, 0, '<Day,2>/<Month,2>/<Year4>');
 
-                    clear(LRecMemberSaleEntry);
-                    LRecMemberSaleEntry.SetFilter(Date, DateYFilter);
-                    LRecMemberSaleEntry.setrange("Member Account No.", LRecMemberPoints."Account No.");
-                    LRecMemberSaleEntry.CalcSums("Gross Amount");
 
-                    TempSummary.DateCreate := CurrentDateTime();
-                    TempSummary.ID := CreateGuid();
+                        TempSummary.DateCreate := CurrentDateTime();
+                        TempSummary.ID := CreateGuid();
 
-                    if LRecMemberPoints."Card No." = '' then begin
-                        Clear(tbMembeShipCard);
-                        tbMembeShipCard.SetRange("Account No.", LRecMemberPoints."Account No.");
-                        if tbMembeShipCard.FindFirst() then begin
-                            TempSummary."Card No." := tbMembeShipCard."Card No.";
-                        end;
-                    end else begin
-                        TempSummary."Card No." := LRecMemberPoints."Card No.";
-
-                        Clear(tbMembeShipCard);
-                        tbMembeShipCard.SetRange("Card No.", TempSummary."Card No.");
-                        if tbMembeShipCard.FindFirst() then begin
-                            // TempSummary."Card No." := tbMembeShipCard."Card No.";
-                        end;
-                    end;
-
-                    TempSummary."Account No_" := LRecMemberPoints."Account No.";
-                    TempSummary."Phone No" := LRecMemberConact."Mobile Phone No.";
-                    TempSummary.Name := LRecMemberConact.Name;
-                    TempSummary.Address := LRecMemberConact.Address;
-                    TempSummary."Tier Code" := tbMembeShipCard."Scheme Code";
-                    TempSummary."Total Point" := '0';
-                    TempSummary.SMS := LRecMemberConact.SMS;
-
-                    clear(MemberAttributesRec);
-                    MemberAttributesRec.setrange("Account No.", LRecMemberPoints."Account No.");
-                    if MemberAttributesRec.FindSet() then begin
-                        repeat
-                            // Check if the attribute is related to the current customer
-                            if MemberAttributesRec."Attribute Code" = 'BEGINDATE' then begin
-                                EVALUATE(begindate, MemberAttributesRec."Attribute Value");
+                        if LRecMemberPoints."Card No." = '' then begin
+                            Clear(tbMembeShipCard);
+                            tbMembeShipCard.SetRange("Account No.", LRecMemberPoints."Account No.");
+                            if tbMembeShipCard.FindFirst() then begin
+                                TempSummary."Card No." := tbMembeShipCard."Card No.";
                             end;
+                        end else begin
+                            TempSummary."Card No." := LRecMemberPoints."Card No.";
 
-                            if MemberAttributesRec."Attribute Code" = 'ENDDATE' then begin
-                                EVALUATE(enddate, MemberAttributesRec."Attribute Value");
+                            Clear(tbMembeShipCard);
+                            tbMembeShipCard.SetRange("Card No.", TempSummary."Card No.");
+                            if tbMembeShipCard.FindFirst() then begin
+                                // TempSummary."Card No." := tbMembeShipCard."Card No.";
                             end;
+                        end;
 
-                        until MemberAttributesRec.Next() = 0;
+                        TempSummary."Account No_" := LRecMemberPoints."Account No.";
+                        TempSummary."Phone No" := LRecMemberConact."Mobile Phone No.";
+                        TempSummary.Name := LRecMemberConact.Name;
+                        TempSummary.Address := LRecMemberConact.Address;
+                        TempSummary."Tier Code" := tbMembeShipCard."Scheme Code";
+                        TempSummary."Total Point" := '0';
+                        TempSummary.SMS := LRecMemberConact.SMS;
+
+                        clear(MemberAttributesRec);
+                        MemberAttributesRec.setrange("Account No.", LRecMemberPoints."Account No.");
+                        if MemberAttributesRec.FindSet() then begin
+                            repeat
+                                // Check if the attribute is related to the current customer
+                                if MemberAttributesRec."Attribute Code" = 'BEGINDATE' then begin
+                                    EVALUATE(begindate, MemberAttributesRec."Attribute Value");
+                                end;
+
+                                if MemberAttributesRec."Attribute Code" = 'ENDDATE' then begin
+                                    EVALUATE(enddate, MemberAttributesRec."Attribute Value");
+                                end;
+
+                            until MemberAttributesRec.Next() = 0;
+                        end;
+
+                        if (LRecMemberConact."Scheme Code" = 'VIP') then begin
+                            TempSummary."Expire Vip Date" := enddate;
+                        end else
+                            ;
+
+                        TempSummary."Expire Point Date" := LRecMemberPoints."Expiration Date";
+
+                        Clear(LRecMemberPointsSale);
+                        LRecMemberPointsSale.SetFilter(Date, DateYFilter);
+                        LRecMemberPointsSale.SetRange("Account No.", LRecMemberPoints."Account No.");
+                        LRecMemberPointsSale.SetRange("Contact No.", LRecMemberPoints."Contact No.");
+                        if LRecMemberPointsSale.FindSet() then begin
+                            repeat
+                                clear(LRecTransSaleEntry);
+                                LRecTransSaleEntry.setrange("Receipt No.", LRecMemberPointsSale."Document No.");
+                                LRecTransSaleEntry.setrange("Store No.", LRecMemberPointsSale."Store No.");
+                                LRecTransSaleEntry.setrange("Transaction No.", LRecMemberPointsSale."Transaction No.");
+                                LRecTransSaleEntry.setrange("POS Terminal No.", LRecMemberPointsSale."POS Terminal No.");
+                                // LRecTransSaleEntry.CalcSums("Total Rounded Amt.");
+                                if LRecTransSaleEntry.FindSet() then begin
+                                    repeat
+                                        TempSummary."Vip Processing Decimal" += -LRecTransSaleEntry."Total Rounded Amt.";
+                                    until LRecTransSaleEntry.Next() = 0;
+                                end;
+                            until LRecMemberPointsSale.Next() = 0;
+                        end;
+
+                        TempSummary."Vip Processing Txt" := Format(Round(ABS(TempSummary."Vip Processing Decimal"), 1, '<'), 0, 9);
+
+                        TempSummary."Email" := LRecMemberConact."E-Mail";
+                        TempSummary."DateTxt" := FORMAT(today(), 0, '<Year4><Month,2><Day,2>');
+                        TempSummary."SystemCreatedAtTxt" := format(CurrentDateTime(), 0, '<Month,2>/<Day,2>/<Year4> <Hour,2>:<Minute,2>');
+
+                        clear(LRecMemberPointsTotal);
+                        LRecMemberPointsTotal.setrange("Account No.", LRecMemberPoints."Account No.");
+                        LRecMemberPointsTotal.CalcSums("Remaining Points");
+
+                        TempSummary."Total Point" := LRecMemberPointsTotal."Remaining Points";
+                        TempSummary."Total Point Txt" := Format(Round(ABS(LRecMemberPointsTotal."Remaining Points"), 1, '<'), 0, 9);
+                        TempSummary.Insert();
                     end;
-
-                    if (LRecMemberConact."Scheme Code" = 'VIP') then begin
-                        TempSummary."Expire Vip Date" := enddate;
-                    end else
-                        ;
-
-                    TempSummary."Expire Point Date" := LRecMemberPoints."Expiration Date";
-                    TempSummary."Vip Processing" := -LRecMemberSaleEntry."Gross Amount";
-                    TempSummary."Email" := LRecMemberConact."E-Mail";
-                    TempSummary."DateTxt" := FORMAT(today(), 0, '<Year4><Month,2><Day,2>');
-                    TempSummary."SystemCreatedAtTxt" := format(CurrentDateTime(), 0, '<Month,2>/<Day,2>/<Year4> <Hour,2>:<Minute,2>');
-
-                    clear(LRecMemberPointsTotal);
-                    LRecMemberPointsTotal.setrange("Account No.", LRecMemberPoints."Account No.");
-                    LRecMemberPointsTotal.CalcSums("Remaining Points");
-
-                    TempSummary."Total Point" := LRecMemberPointsTotal."Remaining Points";
-                    TempSummary."Total Point Txt" := Format(ABS(LRecMemberPointsTotal."Remaining Points"), 0, '<Integer>');
-                    TempSummary.Insert();
                 end;
             until LRecMemberPoints.Next() = 0;
         end;

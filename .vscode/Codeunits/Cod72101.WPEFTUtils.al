@@ -35,11 +35,6 @@ codeunit 72101 WPEFTUtils
             end;
         end;
 
-        //debug
-        // SendToEFT('http://localhost:5000/api/DoTest?HostName=localhost&PortNo=5000&TimeOut=60', ResponseMsg);
-        // exit;
-        //debug
-
         if POSTransaction."Sale Is Return Sale" then begin
             cleaR(LRecCE);
             LRecCE.setrange("Store No.", POSTransaction."Retrieved from Store No.");

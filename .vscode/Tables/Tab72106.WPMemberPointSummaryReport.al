@@ -91,6 +91,16 @@ table 72106 "WP Member Point Summary Report"
             Caption = 'TotalPointTxt';
             DataClassification = CustomerContent;
         }
+        field(18; "Vip Processing Txt"; Text[500])
+        {
+            Caption = 'VipProcessingTxt';
+            DataClassification = CustomerContent;
+        }
+        field(19; "Vip Processing Decimal"; Decimal)
+        {
+            Caption = 'Vip Processing Decimal';
+            DataClassification = CustomerContent;
+        }
         // field(17; "DateFilter"; Date)
         // {
         //     Caption = 'DateFilter';

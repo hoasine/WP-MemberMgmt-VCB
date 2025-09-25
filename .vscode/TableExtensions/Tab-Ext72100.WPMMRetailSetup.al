@@ -47,5 +47,10 @@ tableextension 72100 "WPMM Retail Setup" extends "LSC Retail Setup"
             Caption = 'Url API';
             DataClassification = ToBeClassified;
         }
+        // field(72108; "Disable Cancel LOY"; Boolean)
+        // {
+        //     Caption = 'Disable Cancel LOY';
+        //     DataClassification = ToBeClassified;
+        // }
     }
 }

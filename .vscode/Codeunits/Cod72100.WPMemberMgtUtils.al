@@ -190,6 +190,9 @@ codeunit 72100 WPMemberMgtUtils
         LineNo: Integer;
         NoOfLines: Integer;
         PointJnlPost: Codeunit "LSC Point Jnl.-Post";
+
+        PointJnlPostBatch: Codeunit "LSC Point Jnl.-Post Batch";
+        TempJnlBatchName: Code[10];
     begin
         clear(NoOfLines);
         if lrecrs.get then;
@@ -262,13 +265,34 @@ codeunit 72100 WPMemberMgtUtils
 
             if lrecrs."Auto Post MP on Calc." = true then
                 if NoOfLines > 0 then begin
-                    clear(LRecPJ);
-                    lrecpj.setrange("Journal Template Name", 'T-ADJ');
-                    lrecpj.setrange("Journal Batch Name", 'DEFAULT');
-                    if lrecpj.findset then
-                        PointJnlPost.Run(lrecpj);
-                end;
+                    // clear(LRecPJ);
+                    // lrecpj.setrange("Journal Template Name", 'T-ADJ');
+                    // lrecpj.setrange("Journal Batch Name", 'DEFAULT');
+                    // if lrecpj.findset then
+                    //     PointJnlPost.Run(lrecpj);
 
+                    TempJnlBatchName := LRecPJ."Journal Batch Name";
+                    PointJnlPostBatch.Run(LRecPJ);
+
+                    if LRecPJ."Line No." = 0 then
+                        Message('There is nothing to post.')
+                    else
+                        if TempJnlBatchName = LRecPJ."Journal Batch Name" then
+                            Message('The journal lines were successfully posted.')
+                        else
+                            Message(
+                              'The journal lines were successfully posted. You are now in the %1 journal.',
+                              LRecPJ."Journal Batch Name");
+
+                    if not LRecPJ.Find('=><') or (TempJnlBatchName <> LRecPJ."Journal Batch Name") then begin
+                        LRecPJ.Reset;
+                        LRecPJ.FilterGroup(2);
+                        LRecPJ.SetRange("Journal Template Name", LRecPJ."Journal Template Name");
+                        LRecPJ.SetRange("Journal Batch Name", LRecPJ."Journal Batch Name");
+                        LRecPJ.FilterGroup(0);
+                        LRecPJ."Line No." := 1;
+                    end;
+                end;
         end;
     end;
 
@@ -276,12 +300,43 @@ codeunit 72100 WPMemberMgtUtils
     var
         LRecPJ: record "LSC Member Point Jnl. Line";
         PointJnlPost: Codeunit "LSC Point Jnl.-Post";
+        PointJnlPostBatch: Codeunit "LSC Point Jnl.-Post Batch";
+        TempJnlBatchName: Code[10];
     begin
-        clear(LRecPJ);
-        lrecpj.setrange("Journal Template Name", 'T-ADJ');
-        lrecpj.setrange("Journal Batch Name", 'DEFAULT');
-        if lrecpj.findset then
-            PointJnlPost.Run(lrecpj);
+        // clear(LRecPJ);
+        // lrecpj.setrange("Journal Template Name", 'T-ADJ');
+        // lrecpj.setrange("Journal Batch Name", 'DEFAULT');
+        // if lrecpj.findset then
+        //     PointJnlPost.Run(lrecpj);
+
+
+        // clear(LRecPJ);
+        // lrecpj.setrange("Journal Template Name", 'T-ADJ');
+        // lrecpj.setrange("Journal Batch Name", 'DEFAULT');
+        // if lrecpj.findset then
+        //     PointJnlPost.Run(lrecpj);
+
+        TempJnlBatchName := LRecPJ."Journal Batch Name";
+        PointJnlPostBatch.Run(LRecPJ);
+
+        if LRecPJ."Line No." = 0 then
+            Message('There is nothing to post.')
+        else
+            if TempJnlBatchName = LRecPJ."Journal Batch Name" then
+                Message('The journal lines were successfully posted.')
+            else
+                Message(
+                  'The journal lines were successfully posted. You are now in the %1 journal.',
+                  LRecPJ."Journal Batch Name");
+
+        if not LRecPJ.Find('=><') or (TempJnlBatchName <> LRecPJ."Journal Batch Name") then begin
+            LRecPJ.Reset;
+            LRecPJ.FilterGroup(2);
+            LRecPJ.SetRange("Journal Template Name", LRecPJ."Journal Template Name");
+            LRecPJ.SetRange("Journal Batch Name", LRecPJ."Journal Batch Name");
+            LRecPJ.FilterGroup(0);
+            LRecPJ."Line No." := 1;
+        end;
     end;
 
     local procedure CreateMemPtsJnlTemplate()
