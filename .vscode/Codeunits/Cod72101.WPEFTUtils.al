@@ -112,7 +112,7 @@ codeunit 72101 WPEFTUtils
                         LRecCE."Card Type Name" := LRecTCS.Description;
                         LRecCE."Card Class" := LRecTCS."Tender Point";
                     end else begin
-                        LRecCE."Card Type Name" := 'No Name';
+                        LRecCE."Card Type Name" := 'Other card - No Name';
                     end;
                 end;
 
@@ -121,7 +121,6 @@ codeunit 72101 WPEFTUtils
                 LRecCE."Authorisation Ok" := true;
                 LRecCE.INSERT(true);
             end else begin
-                // Handle errorW
                 POSGUI.PosMessage(StrSubstNo('Error: %1', gERROR));
                 error('');
             end;
